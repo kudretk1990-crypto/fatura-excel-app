@@ -3,6 +3,7 @@ import pandas as pd
 from PIL import Image
 import io
 import fitz
+import gc
 import os
 import json
 import google.generativeai as genai
@@ -105,6 +106,8 @@ if uploaded_file is not None:
                 3. ÇÖP SAYFALAR: Sadece karekod içeren veya boş olan sayfaları faturaymış gibi listeye ekleme.
                 4. MATRAH (KDV HARİÇ TUTAR) MANTIĞI KONTROLÜ: "Matrah" faturadaki KDV'nin hesaplandığı BAZ tutardır. Faturadaki "KDV Matrahı", "Mal ve Hizmet Toplam Tutarı" veya "KDV Hariç Tutar" karşısındaki rakamı tespit etmelisin. KESİNLİKLE "Ödenecek Tutar", "Vergiler Dahil Toplam Tutar" veya "Genel Toplam" (KDV Dahil) rakamını matrah kısmına YAZMA. Mantıksız ve tutarsız rakamlar yazmaktansa, faturada açıkça belirtilen KDV matrahı tutarını bularak yaz.
 
+
+                "DİKKAT: 'Mal/Hizmet Miktarı' sütununu belgeden birebir oku. Asla varsayılan olarak '1' veya '1 adet' yazma! Eğer faturada miktar belirtilmemişse boş bırak. Çıkardığın Miktar, Birim Fiyat ile çarpıldığında Toplam Tutarı vermelidir, bu matematiksel sağlamayı mutlaka yap."
                 ÇEKİLECEK VERİLER:
                 - unvan: Faturayı kesen satıcının Unvanı. (Silikse "OKUNAMADI" yaz).
                 - vkn_tckn: 10 haneli VKN veya 11 haneli TCKN. (Silikse "OKUNAMADI" yaz).
@@ -155,7 +158,21 @@ if uploaded_file is not None:
                         st.rerun()
             else:
                 st.warning("Hiçbir fatura verisi tespit edilemedi.")
+# --- RAM TEMİZLİĞİ VE BELLEK YÖNETİMİ ---
+st.cache_data.clear() # Streamlit önbelleğini temizler
 
+# Eğer resmi hafızada tutan değişkeninizin adı "images" veya "image" ise onları siliyoruz
+try:
+    del images 
+except NameError:
+    pass
+
+try:
+    del image
+except NameError:
+    pass
+
+gc.collect() # Python Çöp Toplayıcısını (Garbage Collector) çalıştırarak RAM'i boşaltır
 # --- SİDEBAR BİLGİLENDİRME ---
 st.sidebar.title("Kullanım Bilgileri")
 st.sidebar.markdown("""
